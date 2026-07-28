@@ -85,16 +85,12 @@ class ModelTrainer:
 
         preprocessor = load_object(self.data_transformation_artifact.transformed_object_file_path)
 
-        model_dir_path = self.model_trainer_config.trained_model_file_path
-
-        # logging.info(f"model dir path : {model_dir_path}")
-        # os.makedirs(model_dir_path, exist_ok= True)
 
         Network_Model = NetworkModel(preprocessor= preprocessor, model = best_model)
-        save_object(model_dir_path, obj = Network_Model) 
+        save_object(self.model_trainer_config.trained_model_file_path, obj = Network_Model) 
 
         ## Model Trainer Artifact
-        model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path = model_dir_path, 
+        model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path = self.model_trainer_config.trained_model_file_path, 
                              train_metric_artifact= classification_train_metric,
                              test_metric_artifact= classification_test_metric)
 
