@@ -15,7 +15,7 @@ class TrainingPipelineConfig:
         self.timestamp : str = timestamp
 
 
-class DataIngestionCongig:
+class DataIngestionConfig:
     def __init__(self, training_pipeline_config : TrainingPipelineConfig):
         self.data_ingestion_dir: str = os.path.join(
             training_pipeline_config.artifact_dir,
@@ -86,6 +86,9 @@ class DataTranformationConfig:
                             training_pipeline.TEST_FILE_NAME.replace("csv", "npy"))
         self.transformed_object_file_path : str = os.path.join(self.data_transformation_dir, training_pipeline.DATA_TRANSFORMATION_TRANSFORMED_OBJECT_DIR,
                             training_pipeline.PREPROCESSING_OBJECT_FILE_NAME.replace("csv", "npy"))
+        self.finalized_dir : str = training_pipeline.FINALIZED_DIR
+        self.finalized_prerocessing_object_path : str = os.path.join(self.finalized_dir, training_pipeline.FINALIZED_PREPROCESSING_OBJECT_NAME)
+
 
 class ModelTrainerConfig:
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
@@ -95,3 +98,5 @@ class ModelTrainerConfig:
         self.expected_score : float = training_pipeline.MODEL_TRAINER_EXPECTED_SCORE
         self.overfitting_underfitting_threshold : float = training_pipeline.MODEL_TRAINER_OVER_FITTING_UNDERFITTING_THRESHOLD
 
+        self.finalized_dir : str = training_pipeline.FINALIZED_DIR
+        self.finalized_model_object_path : str = os.path.join(self.finalized_dir, training_pipeline.FINALIZED_MODEL_OBJECT_NAME)

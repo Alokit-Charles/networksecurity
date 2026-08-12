@@ -21,8 +21,11 @@ from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, Ran
 
 import mlflow
 
+import dagshub
+dagshub.init(repo_owner='Alokit-Charles', repo_name='networksecurity', mlflow=True)
+
 class ModelTrainer:
-    def __init__(self, model_trainer_config : ModelTrainerConfig, data_transformation_artifact : DataTransformationArtifact):
+    def __init__(self, data_transformation_artifact : DataTransformationArtifact, model_trainer_config : ModelTrainerConfig):
         try:
             self.model_trainer_config = model_trainer_config
             self.data_transformation_artifact = data_transformation_artifact
@@ -34,7 +37,7 @@ class ModelTrainer:
         precision_score = classification_metric.precision_score
         recall_score = classification_metric.recall_score
 
-        mlflow.set_tracking_uri("http://127.0.0.1:5000")
+        mlflow.set_tracking_uri("https://dagshub.com/Alokit-Charles/networksecurity.mlflow")
         mlflow.set_experiment("network-security")
         
         with mlflow.start_run(run_name="networksecurity_model"):
@@ -61,15 +64,15 @@ class ModelTrainer:
                 "Logistic Regression": {
                 "C": [0.001, 0.01, 0.1, 1, 10, 100],
                 "penalty": ["l2"],
-                "solver": ["lbfgs", "liblinear"]
+                # "solver": ["lbfgs", "liblinear"]
             },
 
             "KNeighbors": {
                 "n_neighbors": [3, 5, 7, 9, 11, 15, 21],
                 "weights": ["uniform", "distance"],
                 "algorithm": ["auto", "ball_tree", "kd_tree", "brute"],
-                "leaf_size": [20, 30, 40, 50],
-                "p": [1, 2]
+                # "leaf_size": [20, 30, 40, 50],
+                # "p": [1, 2]
             },
 
             "Decision Tree": {
@@ -87,7 +90,7 @@ class ModelTrainer:
                 "max_depth": [None, 10, 20, 30, 50],
                 # "min_samples_split": [2, 5, 10],
                 # "min_samples_leaf": [1, 2, 4],
-                # "max_features": ["sqrt", "log2"],
+                "max_features": ["sqrt", "log2"],
                 # "bootstrap": [True, False]
             },
 
@@ -138,6 +141,9 @@ class ModelTrainer:
 
         Network_Model = NetworkModel(preprocessor= preprocessor, model = best_model)
         save_object(self.model_trainer_config.trained_model_file_path, obj = Network_Model) 
+
+        ## model pusher
+        save_object(self.model_trainer_config.finalized_model_object_path, Network_Model)
 
         ## Model Trainer Artifact
         model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path = self.model_trainer_config.trained_model_file_path, 

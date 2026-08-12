@@ -5,7 +5,7 @@ from networksecurity.components.model_trainer import ModelTrainer
 
 from networksecurity.exception.exception import NetworkSecurityException
 from networksecurity.logging.logger import logging
-from networksecurity.entity.config_entity import DataIngestionCongig, TrainingPipelineConfig, \
+from networksecurity.entity.config_entity import DataIngestionConfig, TrainingPipelineConfig, \
       DataValidationConfig, DataTranformationConfig, ModelTrainerConfig
 
 
@@ -15,7 +15,7 @@ if __name__ == '__main__':
     try :
         ## Data Ingestion
         training_pipeline_config = TrainingPipelineConfig()
-        data_ingestion_config = DataIngestionCongig(training_pipeline_config)
+        data_ingestion_config = DataIngestionConfig(training_pipeline_config)
         data_ingestion = DataIngestion(data_ingestion_config)
         
         logging.info("Initiate Data Ingestion")
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         ## Model Training
         logging.info("Initiate Model Training.")
         model_trainer_config = ModelTrainerConfig(training_pipeline_config)
-        model_trainer = ModelTrainer(model_trainer_config, data_transformation_artifact)
+        model_trainer = ModelTrainer(model_trainer_config = model_trainer_config, data_transformation_artifact= data_transformation_artifact)
         model_trainer_artifact = model_trainer.inititate_model_trainer()
         logging.info("Model Training Completed. Model training artifact created.")
         print(data_transformation_artifact)

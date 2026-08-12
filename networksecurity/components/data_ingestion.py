@@ -3,7 +3,7 @@ from networksecurity.logging.logger import logging
 
 ## confifuration of the Data Ingestion Config
 
-from networksecurity.entity.config_entity import DataIngestionCongig
+from networksecurity.entity.config_entity import DataIngestionConfig
 from networksecurity.entity.artifact_entity import DataIngestionArtifact
 
 import os
@@ -20,7 +20,7 @@ load_dotenv()
 MONGO_DB_URL = os.getenv("MONGO_DB_URL")
 
 class DataIngestion:
-    def __init__(self, data_ingestion_config: DataIngestionCongig):
+    def __init__(self, data_ingestion_config: DataIngestionConfig):
         try:
             self.data_ingestion_config = data_ingestion_config
         except Exception as e:

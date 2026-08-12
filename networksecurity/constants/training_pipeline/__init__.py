@@ -71,3 +71,12 @@ MODEL_TRAINER_TRAINED_FILE_NAME : str = 'model.pkl'
 MODEL_TRAINER_EXPECTED_SCORE: float = 0.6
 MODEL_TRAINER_OVER_FITTING_UNDERFITTING_THRESHOLD : float = 0.05
 
+
+'''
+Finalized Trained Model constant start with FINALIZED_ VAR Name
+'''
+
+FINALIZED_DIR : str = 'finalized_models'
+FINALIZED_MODEL_OBJECT_NAME : str = 'model.pkl'
+FINALIZED_PREPROCESSING_OBJECT_NAME: str = 'preprocessing.pkl'
+
