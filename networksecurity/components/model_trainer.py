@@ -21,8 +21,6 @@ from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, Ran
 
 import mlflow
 
-import dagshub
-dagshub.init(repo_owner='Alokit-Charles', repo_name='networksecurity', mlflow=True)
 
 class ModelTrainer:
     def __init__(self, data_transformation_artifact : DataTransformationArtifact, model_trainer_config : ModelTrainerConfig):
@@ -33,6 +31,9 @@ class ModelTrainer:
             raise NetworkSecurityException(e, sys)
 
     def track_mlflow(self, best_model, classification_metric : ClassificationMetricArtifact):
+        import dagshub
+        dagshub.init(repo_owner='Alokit-Charles', repo_name='networksecurity', mlflow=True)
+
         f1_score = classification_metric.f1_score
         precision_score = classification_metric.precision_score
         recall_score = classification_metric.recall_score
