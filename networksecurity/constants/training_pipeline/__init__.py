@@ -80,3 +80,5 @@ FINALIZED_DIR : str = 'finalized_models'
 FINALIZED_MODEL_OBJECT_NAME : str = 'model.pkl'
 FINALIZED_PREPROCESSING_OBJECT_NAME: str = 'preprocessing.pkl'
 
+'''aws related constants'''
+TRAINING_BUCKET_NAME = 'networksecurity-alokit'
