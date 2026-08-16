@@ -39,6 +39,23 @@ jobs:
         run: |
           python -c "import networksecurity; from networksecurity.pipeline.training_pipeline import TrainingPipeline; print('Package imports OK')"
 
+  push-ecr-image:
+    name : Continuous Delivery
+    needs : build-and-test
+    runs-on : ubuntu-latest
+    steps:
+      - name : Configure AWS credentials
+        uses : aws-actions/configure-aws-credentails@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrests.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name : Login to Amazon ECR
+        id : login-ecr
+        uses : aws-actions/amazon-ecr-login@v1
+        
+
   # ------------------------------------------------------------------
   # Docker build/push job goes here once the Dockerfile is finalized.
   # It would build the image and push it to a registry (e.g. GHCR),
