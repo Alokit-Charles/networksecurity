@@ -102,7 +102,13 @@ jobs:
             fi
       - name: Run Docker Image to server users
         run: |
-            docker run -d -p 8080:8080 --ipc="host" --name=networksecurity -e 'AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}' -e 'AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}' -e 'AWS_REGION=${{secrets.AWS_REGION}}' ${{secrets.AWS_ECR_LOGIN_URI}}:latest
+            docker run -d -p 8080:8080 --ipc="host" --name=networksecurity \
+              -v /home/ubuntu/networksecurity/finalized_models:/app/finalized_models \
+              -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' \
+              -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+              -e 'AWS_REGION=${{ secrets.AWS_REGION }}' \
+              -e 'DAGSHUB_USER_TOKEN=${{ secrets.DAGSHUB_USER_TOKEN }}' \
+              ${{secrets.AWS_ECR_LOGIN_URI}}:latest
 
       - name: Clean previous images and containers
         run: |
