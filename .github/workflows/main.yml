@@ -94,12 +94,7 @@ jobs:
       
       - name: Stop and Remove running container
         run: |
-            if docker ps -q --filter "name=networksecurity" | grep -q .; then
-              docker stop networksecurity
-              docker rm -fv networksecurity
-            else
-              echo "No running 'networksecurity' container found, skipping."
-            fi
+            docker rm -f networksecurity || true
       - name: Run Docker Image to server users
         run: |
             docker run -d -p 8080:8080 --ipc="host" --name=networksecurity \

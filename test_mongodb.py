@@ -1,6 +1,11 @@
+import os
 from pymongo import MongoClient
-uri = "mongodb+srv://charlestoppo2002_db_user:<@password>@cluster0.vkteycb.mongodb.net/?appName=Cluster0"
-client = MongoClient(uri)
+from dotenv import load_dotenv
+load_dotenv()
+
+MONGO_DB_URL = os.getenv("MONGO_DB_URL")
+client = MongoClient(MONGO_DB_URL)
+
 try:
     client.admin.command("ping")
     print("Connected successfully")
