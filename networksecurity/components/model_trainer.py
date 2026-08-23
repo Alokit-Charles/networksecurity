@@ -12,6 +12,7 @@ from networksecurity.utils.ml_utils.metric.classification_metric import get_clas
 from networksecurity.utils.ml_utils.model.estimator import NetworkModel
 
 from networksecurity.constants.training_pipeline import TARGET_COLUMN
+from networksecurity.constants.training_pipeline import DAGSHUB_REPO_OWNER, DAGSHUB_REPO_NAME, MLFLOW_EXPERIMENT_NAME
 
 
 from sklearn.linear_model import LogisticRegression
@@ -32,14 +33,14 @@ class ModelTrainer:
 
     def track_mlflow(self, best_model, classification_metric : ClassificationMetricArtifact):
         import dagshub
-        dagshub.init(repo_owner='Alokit-Charles', repo_name='networksecurity', mlflow=True)
+        dagshub.init(repo_owner=DAGSHUB_REPO_OWNER, repo_name=DAGSHUB_REPO_NAME, mlflow=True)
 
         f1_score = classification_metric.f1_score
         precision_score = classification_metric.precision_score
         recall_score = classification_metric.recall_score
 
-        mlflow.set_tracking_uri("https://dagshub.com/Alokit-Charles/networksecurity.mlflow")
-        mlflow.set_experiment("network-security")
+        mlflow.set_tracking_uri(f"https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow")
+        mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
         
         with mlflow.start_run(run_name="networksecurity_model"):
             mlflow.log_metric("f1_score", f1_score)
@@ -178,4 +179,3 @@ class ModelTrainer:
 
         except Exception as e:
             raise NetworkSecurityException(e, sys)
-        

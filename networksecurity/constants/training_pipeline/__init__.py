@@ -82,3 +82,12 @@ FINALIZED_PREPROCESSING_OBJECT_NAME: str = 'preprocessing.pkl'
 
 '''aws related constants'''
 TRAINING_BUCKET_NAME = 'networksecurity-alokit'
+
+'''
+DagsHub / MLflow tracking constants.
+Override via env vars so forks/other users track experiments to their own
+DagsHub repo instead of the original author's.
+'''
+DAGSHUB_REPO_OWNER: str = os.getenv("DAGSHUB_REPO_OWNER", "Alokit-Charles")
+DAGSHUB_REPO_NAME: str = os.getenv("DAGSHUB_REPO_NAME", "networksecurity")
+MLFLOW_EXPERIMENT_NAME: str = os.getenv("MLFLOW_EXPERIMENT_NAME", "network-security")
