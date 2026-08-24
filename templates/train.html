@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Pipeline — NetworkSecurity</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="shell">
+      <a class="brand" href="/"><span class="brand-mark"></span>NetworkSecurity</a>
+      <nav class="nav-links">
+        <a href="/train">Train</a>
+        <a href="/predict">Test a File</a>
+        <a href="/docs">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell status-wrap">
+    <div class="status-card" id="card">
+      <div class="status-icon" id="status-icon">⚙</div>
+      <h1 id="title">Executing Training Pipeline</h1>
+      <p id="message">This may take 15 - 30 mins</p>
+
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="progress-status" id="progress-text">0% completed</div>
+
+      <div class="cta-row" id="actions" style="justify-content:center; margin-top:24px; display:none;">
+        <a class="btn btn-primary" id="primary-btn" href="/predict">Test a file →</a>
+        <a class="btn btn-secondary" href="/">Back home</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const evtSource = new EventSource("/train-stream");
+    const progressBar = document.getElementById("progress-bar");
+    const progressText = document.getElementById("progress-text");
+    const title = document.getElementById("title");
+    const message = document.getElementById("message");
+    const icon = document.getElementById("status-icon");
+    const card = document.getElementById("card");
+    const actions = document.getElementById("actions");
+    const primaryBtn = document.getElementById("primary-btn");
+
+    evtSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      progressBar.style.width = data.progress;
+      progressText.textContent = `${data.progress} — ${data.message}`;
+
+      if (data.status === "completed") {
+        evtSource.close();
+        card.classList.add("success");
+        icon.textContent = "✓";
+        title.textContent = "Training Completed!";
+        message.textContent = data.message;
+        actions.style.display = "flex";
+      } else if (data.status === "error") {
+        evtSource.close();
+        card.classList.add("error");
+        icon.textContent = "!";
+        title.textContent = "Training Failed";
+        message.textContent = data.message;
+        primaryBtn.textContent = "Try again";
+        primaryBtn.href = "/train";
+        actions.style.display = "flex";
+      }
+    };
+
+    evtSource.onerror = function() {
+      evtSource.close();
+      card.classList.add("error");
+      icon.textContent = "!";
+      title.textContent = "Connection Lost";
+      message.textContent = "Lost stream connection to training server.";
+      primaryBtn.textContent = "Try again";
+      primaryBtn.href = "/train";
+      actions.style.display = "flex";
+    };
+  </script>
+</body>
+</html>

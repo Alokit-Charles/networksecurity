@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test a File — NetworkSecurity</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="shell">
+      <a class="brand" href="/">
+        <span class="brand-mark"></span>
+        NetworkSecurity
+      </a>
+      <nav class="nav-links">
+        <a href="/train">Train</a>
+        <a href="/predict">Test a File</a>
+        <a href="/docs">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="page-head">
+      <span class="eyebrow">Batch prediction</span>
+      <h1>Test a URL or URL dataset</h1>
+      <p>
+        Test a URL or upload a CSV with one row per URL and its 30 structural feature columns
+        (matching <code>data_schema/schema.yaml</code>). Each row gets classified
+        as <strong>legitimate</strong> or <strong>phishing</strong>.
+      </p>
+    </div>
+    
+    <!-- Single URL Scanner Section -->
+    <div class="upload-card" style="margin-bottom: 24px;">
+      <h3 style="margin-bottom: 12px; font-size: 18px;">Scan a single URL</h3>
+      <form action="/predict-url" method="post" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <input 
+          type="url" 
+          name="url" 
+          placeholder="https://example-phishing-link.com/login" 
+          required 
+          style="flex: 1; min-width: 280px; padding: 13px 16px; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-primary); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 14px;"
+        >
+        <button type="submit" class="btn btn-primary">Scan URL →</button>
+      </form>
+    </div>
+
+    <!-- Existing Batch CSV Upload Card -->
+    <div class="upload-card">
+      <form action="/predict" method="post" enctype="multipart/form-data" id="predict-form">
+        <label class="dropzone" id="dropzone">
+          <div class="icon">⇪</div>
+          <div class="primary-copy"><strong>Choose a file</strong> or drag it here</div>
+          <div class="secondary-copy">.csv up to a few thousand rows</div>
+          <input type="file" name="file" id="file-input" accept=".csv" required>
+        </label>
+        <div class="file-chosen" id="file-chosen"></div>
+
+        <div class="submit-row">
+          <button type="submit" class="btn btn-primary" id="submit-btn">Run prediction →</button>
+          <span class="hint">Results open in this window.</span>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:8px;">
+      <span>NetworkSecurity — phishing URL detection pipeline</span>
+      <span><a href="/docs">API reference</a></span>
+    </div>
+  </footer>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const input = document.getElementById('file-input');
+    const chosen = document.getElementById('file-chosen');
+    const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('predict-form');
+
+    function showFile(name) {
+      chosen.textContent = '📄 ' + name;
+      chosen.style.display = 'block';
+    }
+
+    input.addEventListener('change', () => {
+      if (input.files.length) showFile(input.files[0].name);
+    });
+
+    ['dragover'].forEach(evt =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('is-dragover');
+      })
+    );
+    ['dragleave', 'drop'].forEach(evt =>
+      dropzone.addEventListener(evt, () => dropzone.classList.remove('is-dragover'))
+    );
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        showFile(e.dataTransfer.files[0].name);
+      }
+    });
+
+    form.addEventListener('submit', () => {
+      submitBtn.textContent = 'Running…';
+      submitBtn.disabled = true;
+    });
+  </script>
+
+</body>
+</html>

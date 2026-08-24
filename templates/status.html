@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} — NetworkSecurity</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="shell">
+      <a class="brand" href="/">
+        <span class="brand-mark"></span>
+        NetworkSecurity
+      </a>
+      <nav class="nav-links">
+        <a href="/train">Train</a>
+        <a href="/predict">Test a File</a>
+        <a href="/docs">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell status-wrap">
+    <div class="status-card {{ state }}">
+      <div class="status-icon">{{ "✓" if state == "success" else "!" }}</div>
+      <h1>{{ title }}</h1>
+      <p>{{ message }}</p>
+      {% if detail %}<pre>{{ detail }}</pre>{% endif %}
+      <div class="cta-row" style="justify-content:center;">
+        {% if state == "success" %}
+          <a class="btn btn-primary" href="/predict">Test a file →</a>
+          <a class="btn btn-secondary" href="/">Back home</a>
+        {% else %}
+          <a class="btn btn-primary" href="/train">Try again →</a>
+          <a class="btn btn-secondary" href="/">Back home</a>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

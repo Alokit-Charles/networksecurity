@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Scan Result — NetworkSecurity</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="shell">
+      <a class="brand" href="/">
+        <span class="brand-mark"></span>
+        NetworkSecurity
+      </a>
+      <nav class="nav-links">
+        <a href="/train">Train</a>
+        <a href="/predict">Test a File</a>
+        <a href="/docs">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="page-head">
+      <span class="eyebrow">Single URL Inspection</span>
+      <h1>Scan Analysis Complete</h1>
+    </div>
+
+    <!-- Summary Verdict Card -->
+    <div class="upload-card" style="margin-top: 20px;">
+      <div style="margin-bottom: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--text-muted);">
+        Target URL:
+      </div>
+      <div class="scan-url" style="margin-bottom: 20px; word-break: break-all; white-space: normal;">
+        {{ scanned_url }}
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 16px; font-weight: 500;">Verdict:</span>
+        {% if is_safe %}
+          <span class="badge safe" style="font-size: 14px; padding: 6px 14px;">Legitimate Site</span>
+        {% else %}
+          <span class="badge phish" style="font-size: 14px; padding: 6px 14px;">Phishing Threat Flagged</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Extracted Feature Vector Breakdown -->
+    <div class="page-head" style="padding-top: 32px;">
+      <h2 style="font-size: 20px;">Extracted Feature Matrix (30 Rules)</h2>
+      <!-- <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+        1 = Legitimate Signal, 0 = Suspicious Signal, -1 = Phishing Signal
+      </p> -->
+    </div>
+
+    <div class="table-wrap" style="margin-top: 16px;">
+      <div class="table-scroll">
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>Feature Name</th>
+              <!-- <th>Extracted Value</th> -->
+              <th>Risk Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, val in extracted_features.items() %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-weight: 500;">{{ key }}</td>
+              <!-- <td>{{ val }}</td> -->
+              <td>
+                {% if val == 1 %}
+                  <span class="badge safe">Safe</span>
+                {% else %}
+                  <span class="badge phish">Suspicious/Phishing</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="result-actions" style="margin-top: 28px;">
+      <a class="btn btn-primary" href="/predict">Scan Another URL →</a>
+      <a class="btn btn-secondary" href="/">Back Home</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell">
+      <span>NetworkSecurity — phishing URL detection pipeline</span>
+      <span><a href="/docs">API reference</a></span>
+    </div>
+  </footer>
+
+</body>
+</html>

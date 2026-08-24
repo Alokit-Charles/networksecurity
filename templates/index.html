@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Security — Phishing Detection</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="shell">
+      <a class="brand" href="/">
+        <span class="brand-mark"></span>
+        NetworkSecurity
+      </a>
+      <nav class="nav-links">
+        <a href="/train">Train</a>
+        <a href="/predict">Test a File</a>
+        <a href="/docs">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Phishing URL Detection System</span>
+        <h1>Know a phishing link <em>before</em> it knows you.</h1>
+        <p class="lede">
+          A trained classifier that reads the structural signals of a URL —
+          IP-based hosts, mismatched sub-domains, suspicious redirects, shortened
+          links — and tells you whether it looks legitimate or phishing, in
+          milliseconds, before anyone clicks.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/predict">Predict</a>
+          <a class="btn btn-secondary" href="/train">Train the Model</a>
+        </div>
+      </div>
+
+      <!-- Functional Live URL Scanner -->
+      <div class="scan-panel">
+        <div class="scan-label">// live url scanner</div>
+        <form action="/" method="post" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+          <input 
+            type="url" 
+            name="url" 
+            placeholder="Paste URL (e.g. https://example.com/login)" 
+            required 
+            style="width: 100%; padding: 12px 14px; background: var(--surface-alt); border: 1px solid var(--border-soft); color: var(--text-primary); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 13.5px;"
+          >
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="scan-verdict" style="margin-top: 0;">
+              Extracts 30 structural features
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding: 9px 18px; font-size: 13.5px;">
+              Analyze URL →
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="pipeline">
+      <div class="pipeline-head">
+        <h2>How a prediction gets made</h2>
+        <p>Four stages, run end-to-end every time you hit Train.</p>
+      </div>
+      <div class="pipeline-track">
+        <div class="stage">
+          <div class="stage-index">01</div>
+          <h3>Ingest</h3>
+          <p>Pulls labeled URL records from MongoDB and splits them into train / test sets.</p>
+        </div>
+        <div class="stage">
+          <div class="stage-index">02</div>
+          <h3>Validate</h3>
+          <p>Checks the data against the expected schema and screens for feature drift.</p>
+        </div>
+        <div class="stage">
+          <div class="stage-index">03</div>
+          <h3>Transform</h3>
+          <p>Imputes missing values and prepares the 30 structural features for training.</p>
+        </div>
+        <div class="stage">
+          <div class="stage-index">04</div>
+          <h3>Train</h3>
+          <p>Fits six candidate models, keeps the best performer, logs it to MLflow.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="actions">
+      <div class="action-card">
+        <span class="tag">01 — Model</span>
+        <h3>Train the model</h3>
+        <p>
+          Runs the full ingestion-to-training pipeline against the current data in
+          MongoDB and saves a fresh model for prediction. Takes a minute or two,
+          depending on data volume.
+        </p>
+        <a class="btn btn-secondary" href="/train">Run training →</a>
+      </div>
+      <div class="action-card">
+        <span class="tag">02 — Prediction</span>
+        <h3>Test a URL or URL dataset</h3>
+        <p>
+          Test URL or upload a CSV of URL feature rows and get an instant verdict — legitimate
+          or phishing.
+        </p>
+        <a class="btn btn-secondary" href="/predict"> Predict →</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell">
+      <span>NetworkSecurity — phishing URL detection pipeline</span>
+      <span><a href="/docs">API reference</a></span>
+    </div>
+  </footer>
+
+</body>
+</html>
