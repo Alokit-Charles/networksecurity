@@ -1,10 +1,38 @@
 # Network Security Project — Phishing URL Detection
 
-An end-to-end ML pipeline that ingests phishing/network-security data from MongoDB, validates and transforms it, trains a classification model (with MLflow experiment tracking via DagsHub), syncs artifacts to S3, and serves training + prediction through a FastAPI app — deployed via a self-hosted GitHub Actions runner on EC2.
+An end-to-end ML pipeline that ingests phishing/network-security data from MongoDB, validates and transforms it, trains a classification model (with MLflow experiment tracking via DagsHub), syncs artifacts to S3, and serves training + prediction through a styled FastAPI web app — deployed via a self-hosted GitHub Actions runner on EC2.
+
+Trained on the 30-feature scheme from Mohammad, Thabtah & McCluskey's ["Phishing Websites Features"](https://archive.ics.uci.edu/dataset/327/phishing) (UCI Machine Learning Repository) — the same paper the app's own live URL scanner implements feature-for-feature.
+
+## Screenshots
+
+**Home** — pipeline overview plus a live single-URL scanner right in the hero.
+![Home page](docs/screenshots/01_home.png)
+
+**Test a URL or dataset** — scan a single URL instantly, or upload a CSV for batch predictions.
+![Predict page](docs/screenshots/02_predict.png)
+
+**Live training progress** — streamed via Server-Sent Events as the pipeline actually runs.
+![Training progress](docs/screenshots/03_train_progress.png)
+
+**Batch prediction results** — summary counts plus a color-coded, scrollable results table.
+![Batch results](docs/screenshots/04_result_batch.png)
+
+**Single URL scan result** — verdict plus the full 30-feature breakdown behind it.
+![Single URL result](docs/screenshots/05_result_single_url.png)
+
+**Status pages** — a shared success/error template used across training and prediction.
+
+| Success | Error |
+|---|---|
+| ![Success](docs/screenshots/06_status_success.png) | ![Error](docs/screenshots/07_status_error.png) |
 
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
+- [Web UI](#web-ui)
+- [How the Live Feature Extraction Works](#how-the-live-feature-extraction-works)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [1. Clone & Install](#1-clone--install)
@@ -39,32 +67,82 @@ Data Ingestion  ──▶  Data Validation  ──▶  Data Transformation  ─�
 - **Model Trainer** (`model_trainer.py`) — trains 6 candidate models (Logistic Regression, KNN, Decision Tree, Random Forest, Gradient Boosting, AdaBoost) with grid search, logs metrics + the best model to MLflow (via DagsHub), saves `finalized_models/model.pkl`.
 - **S3 Sync** (`networksecurity/cloud/s3_syncer.py`) — after training, `TrainingPipeline.run_pipeline()` shells out to the AWS CLI to sync `Artifacts/<timestamp>/` and `finalized_models/` to `s3://networksecurity-alokit/...`. This is best-effort: since it runs via `os.system()`, a missing/misconfigured AWS CLI won't crash the pipeline, but the sync will silently no-op.
 
-Serving is handled by `app.py` (FastAPI):
+Serving is handled by `app.py` (FastAPI + Jinja2 templates + a `static/` CSS bundle):
 
-| Route      | Method | Purpose                                                          |
-|------------|--------|-------------------------------------------------------------------|
-| `/`        | GET    | Redirects to interactive API docs (`/docs`)                       |
-| `/train`   | GET    | Triggers a full run of `TrainingPipeline`                         |
-| `/predict` | POST   | Accepts a CSV upload, runs it through the saved model, returns an HTML table |
+| Route            | Method   | Purpose                                                                 |
+|-------------------|----------|----------------------------------------------------------------------------|
+| `/`               | GET      | Home page - pipeline overview and a live single-URL scanner form           |
+| `/`               | POST     | Handles the homepage's single-URL scan form (`url` field)                  |
+| `/train`          | GET      | Renders the training page; kicks off streaming via `/train-stream`         |
+| `/train-stream`   | GET      | Server-Sent Events endpoint - streams real stage-by-stage training progress |
+| `/predict`        | GET      | Renders the predict page (single-URL form + CSV upload form)               |
+| `/predict`        | POST     | Accepts a CSV upload, scores every row, returns a results table            |
+| `/predict-url`    | POST     | Scores a single URL live (fetches the page, runs WHOIS/DNS/TLS checks), returns a verdict + full feature breakdown |
+
+## Web UI
+
+The app is a full browser-based UI, not just a Swagger-only API:
+
+- **Home (`/`)** - explains the pipeline and includes a live single-URL scanner right in the hero: paste a URL, get an instant verdict.
+- **Test a URL or dataset (`/predict`)** - two ways to test: a single-URL form, or a drag-and-drop CSV uploader for batch scoring against `data_schema/schema.yaml`-shaped rows.
+- **Train (`/train`)** - triggers `TrainingPipeline` and shows real stage-by-stage progress (Ingest to Validate to Transform to Train) streamed over Server-Sent Events from `/train-stream`, not a simulated progress bar. Lands on a success or error state depending on the outcome.
+- **Results pages** - batch predictions render as a summary (total/legitimate/phishing counts) plus a color-coded table; single-URL scans render a verdict plus the full 30-feature matrix that produced it.
+- **Common errors are handled explicitly** - e.g. hitting `/predict` before any model has been trained shows a clear "Model Artifacts Not Found" page pointing you to `/train`, instead of a raw 500 error.
+
+## How the Live Feature Extraction Works
+
+`networksecurity/utils/feature_extraction/feature_extraction.py` implements all 30 features from the Mohammad, Thabtah and McCluskey "Phishing Websites Features" paper (the methodology behind the UCI dataset this model is trained on), applied live to whatever URL a user pastes into the scanner - not a simplified subset.
+
+**Two speeds:**
+- **Lexical features (instant, no network)** - IP-address usage, URL length, shortener detection, `@` symbols, sub-domain depth, `-` in the domain, `https` token misuse. Computed directly from the URL string.
+- **Live-lookup features (a few seconds)** - everything else requires actually reaching out: an HTTP fetch and HTML parse (favicon origin, external resource ratios, form actions, `<iframe>`/popup/right-click-blocking JS patterns), a TLS handshake against the live certificate (issuer and age), a WHOIS lookup (domain age, registration length, registrant vs. URL match), and a DNS resolution check.
+
+**Five features rely on data sources the original 2015 paper used that no longer exist or are now paywalled** - each is documented inline in the module with its substitute:
+
+| Original source | Status | Substitute used here |
+|---|---|---|
+| Alexa rank (`web_traffic`) | Shut down by Amazon, 2022 | [Tranco list](https://tranco-list.eu) - the standard academic Alexa replacement, via its public API |
+| Google PageRank (`Page_Rank`) | Discontinued 2016, no free replacement | Defaults to "Suspicious" (0) unless you supply an [Open PageRank](https://www.domcop.com/openpagerank/) API key |
+| Google index check (`Google_Index`) | Scraping search results violates Google's ToS | Defaults to "assume indexed" (1) unless you supply a Google Programmable Search Engine key and CX ID |
+| Backlink count (`Links_pointing_to_page`) | Requires a paid index (Moz/Ahrefs/Majestic) | Defaults to "Suspicious" (0) - no free live source exists |
+| Static top-10 phishing/legit lists (`Statistical_report`) | Paper used static 2010-2012 lists | Live lookup against the [PhishTank](https://phishtank.org) public database instead |
+
+Each of these functions is written to fail toward "Suspicious" (0) rather than silently asserting "Phishing" (-1) when a live check can't be completed (network hiccup, WHOIS rate-limited, etc.) - so a flaky lookup degrades the verdict's confidence rather than actively skewing it toward false positives.
+
+**New dependencies** this pulls in over the base ML pipeline: `beautifulsoup4` (HTML parsing), `tldextract` (accurate public-suffix-aware domain parsing), and `whois` (WHOIS lookups). `dnspython` is used if installed but is optional - the DNS check falls back to a plain `socket.gethostbyname` otherwise.
+
+> **Heads up:** WHOIS lookups (port 43) and some live-fetch checks can be slow or blocked entirely on networks/hosts with restrictive egress rules, including some CI runners and locked-down cloud VPCs. If `/predict-url` on your EC2 deployment seems to hang or every feature comes back defaulted, check that outbound traffic on port 43 and standard HTTP(S) isn't being blocked by the instance's security group or an intermediate proxy.
 
 ## Project Structure
 
 ```
 networksecurity/
-├── .github/workflows/main.yml   # 3-job CI/CD: test → build & push to ECR → deploy to EC2
+├── .github/workflows/main.yml   # 3-job CI/CD: test -> build & push to ECR -> deploy to EC2
 ├── Network_Data/                # Source CSV (phisingData.csv)
+├── valid_data/test.csv          # Sample file for exercising the batch /predict upload
 ├── data_schema/schema.yaml      # Expected columns/types for validation
+├── docs/screenshots/            # README screenshots
 ├── networksecurity/
 │   ├── cloud/s3_syncer.py       # `aws s3 sync` wrapper
 │   ├── components/              # data_ingestion, data_validation, data_transformation, model_trainer
-│   ├── constants/training_pipeline/  # all pipeline constants (paths, filenames, bucket name, thresholds)
+│   ├── constants/training_pipeline/  # all pipeline constants (paths, filenames, bucket name, thresholds, DagsHub config)
 │   ├── entity/                  # config_entity.py, artifact_entity.py
 │   ├── exception/                # custom NetworkSecurityException
 │   ├── logging/                   # custom logger (writes to logs/<timestamp>.log)
 │   ├── pipeline/                   # training_pipeline.py, batch_prediction.py
-│   └── utils/                       # main_utils, ml_utils (metrics, model estimator wrapper)
-├── templates/table.html         # HTML template used by /predict
-├── app.py                       # FastAPI app (train + predict routes)
+│   └── utils/
+│       ├── feature_extraction/feature_extraction.py  # live 30-feature extractor for a raw URL (see below)
+│       ├── main_utils/                                # load/save object helpers
+│       └── ml_utils/                                  # metrics, model estimator wrapper
+├── static/style.css             # Shared design system for every page
+├── templates/
+│   ├── index.html                # Home page + live single-URL scanner
+│   ├── predict.html              # Predict page (single-URL form + CSV uploader)
+│   ├── train.html                # Live SSE-driven training progress page
+│   ├── result.html                # Batch prediction results table
+│   ├── result_single.html         # Single-URL scan result + feature matrix
+│   └── status.html                # Shared success/error page
+├── app.py                       # FastAPI app - all routes, SSE streaming, template rendering
 ├── main.py                      # CLI entrypoint, runs the pipeline stage-by-stage
 ├── push_data.py                 # One-off script: load Network_Data CSV into MongoDB
 ├── test_mongodb.py              # Quick MongoDB connectivity check
@@ -77,6 +155,7 @@ networksecurity/
 
 - Python 3.10+
 - A MongoDB Atlas cluster (or any MongoDB instance) and its connection URI
+- Outbound network access for the live URL scanner (`/predict-url`): standard HTTP(S), plus WHOIS on port 43 and DNS - some locked-down networks or CI runners block these (see [How the Live Feature Extraction Works](#how-the-live-feature-extraction-works))
 - An AWS account with:
   - An **ECR repository** to hold the Docker image
   - An **S3 bucket** named `networksecurity-alokit` (or update `TRAINING_BUCKET_NAME` in `networksecurity/constants/training_pipeline/__init__.py` to match your own)
@@ -164,7 +243,7 @@ or
 uvicorn app:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-Open **http://localhost:8080/docs** for the Swagger UI, where you can trigger `/train` and `/predict` (upload a CSV; results render as an HTML table).
+Open **http://localhost:8080** for the actual web app (home page, live scanner, train, predict), or **http://localhost:8080/docs** for the Swagger UI if you'd rather hit the routes directly.
 
 ## 6. Run with Docker (local)
 
