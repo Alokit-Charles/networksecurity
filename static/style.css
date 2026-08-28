@@ -649,6 +649,18 @@ table.result-table tbody tr:hover {
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 20px;
+  background: rgba(91, 141, 184, 0.12);
+  color: var(--steel);
+  animation: spin 2.2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-card.success .status-icon,
+.status-card.error .status-icon {
+  animation: none;
 }
 
 .status-card.success .status-icon {
@@ -683,4 +695,33 @@ table.result-table tbody tr:hover {
   color: var(--text-muted);
   overflow-x: auto;
   margin: 0 0 26px;
+}
+
+/* ---------- Live progress bar (used on the /train streaming page) ---------- */
+
+.progress-container {
+  margin: 26px 0 10px;
+  height: 8px;
+  border-radius: 100px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, var(--steel), var(--accent));
+  transition: width 0.6s ease;
+}
+
+.status-card.success .progress-bar { background: var(--safe); }
+.status-card.error .progress-bar { background: var(--phish); }
+
+.progress-status {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 26px;
 }

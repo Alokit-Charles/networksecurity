@@ -11,5 +11,8 @@ dagshub
 fastapi
 uvicorn
 python-multipart
+bs4
+tldextract
+whois
 
 # -e .
